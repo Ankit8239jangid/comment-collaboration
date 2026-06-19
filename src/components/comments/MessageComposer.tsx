@@ -103,9 +103,10 @@ export function MessageComposer({
     const result = getActiveMentionQuery(liveText, caret);
     if (result) {
       const rect = el.getBoundingClientRect();
+      // Render BELOW the textarea (was previously above, which broke layout)
       setMentionPos({
-        top: rect.top - 8,
-        left: rect.left + Math.min(120, rect.width / 2),
+        top: rect.bottom + 6,
+        left: rect.left + Math.min(40, rect.width / 4),
       });
       setMentionQuery(result);
     } else {
@@ -121,9 +122,10 @@ export function MessageComposer({
     const result = getActiveMentionQuery(liveText, caret);
     if (result) {
       const rect = e.target.getBoundingClientRect();
+      // Render BELOW the textarea
       setMentionPos({
-        top: rect.top - 8,
-        left: rect.left + Math.min(120, rect.width / 2),
+        top: rect.bottom + 6,
+        left: rect.left + Math.min(40, rect.width / 4),
       });
       setMentionQuery(result);
     } else {

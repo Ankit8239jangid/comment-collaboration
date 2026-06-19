@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, X, MessageSquare } from "lucide-react";
+import { ArrowLeft, Search, X, MessageSquare, Bell } from "lucide-react";
 import { useCommentsStore, discussionKey } from "@/store/comments-store";
 import { CommentCard } from "./CommentCard";
 import { MessageComposer } from "./MessageComposer";
@@ -49,15 +49,16 @@ export function DiscussionView() {
     let lastTimestamp: number | null = null;
     let unreadInserted = false;
 
-    const allComments: { c: Comment; grouped: boolean }[] = [];
+    // Comments come pre-sorted from the store: pinged comment(s) first, then chronological.
+    // We split into two passes so we can render a "Pinned" divider above the pinged comment.
+    const allComments: { c: Comment; grouped: boolean; pinned: boolean }[] = [];
     for (const c of discussion.comments) {
-      // Determine if grouped with previous comment
       const ts = new Date(c.createdAt).getTime();
       const grouped =
         lastAuthorId === c.authorId &&
         lastTimestamp !== null &&
         ts - lastTimestamp < 5 * 60 * 1000; // within 5 min
-      allComments.push({ c, grouped });
+      allComments.push({ c, grouped, pinned: !!c.pinged });
       lastAuthorId = c.authorId;
       lastTimestamp = ts;
     }
@@ -68,14 +69,38 @@ export function DiscussionView() {
       ? Math.max(0, discussion.comments.length - discussion.unreadCount)
       : -1;
 
+    let pinnedDividerInserted = false;
+    let chronologicalDividerInserted = false;
+
     for (let i = 0; i < allComments.length; i++) {
-      const { c, grouped } = allComments[i];
-      const dg = formatDateGroup(c.createdAt);
-      if (dg !== lastDate) {
-        items.push({ type: "date", date: dg });
-        lastDate = dg;
-        lastAuthorId = null; // reset grouping on new day
+      const { c, grouped, pinned } = allComments[i];
+
+      // Insert "Pinned" divider above the first pinned comment
+      if (pinned && !pinnedDividerInserted) {
+        items.push({ type: "date", date: "📌 Pinned" });
+        pinnedDividerInserted = true;
+        lastDate = "📌 Pinned";
+        lastAuthorId = null;
       }
+
+      // Insert a date divider when crossing from pinned section into chronological section,
+      // OR when the date changes within the chronological section.
+      if (!pinned) {
+        if (!chronologicalDividerInserted) {
+          // First chronological comment — render a "Discussion" divider
+          items.push({ type: "date", date: "Discussion" });
+          chronologicalDividerInserted = true;
+          lastDate = "Discussion";
+          lastAuthorId = null;
+        }
+        const dg = formatDateGroup(c.createdAt);
+        if (dg !== lastDate) {
+          items.push({ type: "date", date: dg });
+          lastDate = dg;
+          lastAuthorId = null; // reset grouping on new day
+        }
+      }
+
       if (!unreadInserted && i === firstUnreadIdx && firstUnreadIdx > 0) {
         items.push({ type: "unread" });
         unreadInserted = true;
@@ -219,6 +244,23 @@ export function DiscussionView() {
           <div className="space-y-1">
             {filteredItems.map((it, idx) => {
               if (it.type === "date" && it.date) {
+                const isPinnedDivider = it.date.startsWith("📌");
+                if (isPinnedDivider) {
+                  return (
+                    <div
+                      key={`d-${idx}`}
+                      className="mt-2 mb-1 flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-1.5 ring-1 ring-orange-200"
+                    >
+                      <Bell className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-primary">
+                        Pinned comment
+                      </span>
+                      <span className="text-[10px] text-primary/70">
+                        • Most recent ping replaces earlier ones
+                      </span>
+                    </div>
+                  );
+                }
                 return (
                   <div
                     key={`d-${idx}`}

@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Check,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { RoleBadge } from "./RoleBadge";
@@ -55,8 +57,8 @@ export function CommentCard({
   const currentUserId = useCommentsStore((s) => s.currentUserId);
   const inlineReplyCommentId = useCommentsStore((s) => s.inlineReplyCommentId);
   const setInlineReply = useCommentsStore((s) => s.setInlineReply);
-  const openThread = useCommentsStore((s) => s.openThread);
-  const view = useCommentsStore((s) => s.view);
+  const toggleThreadExpanded = useCommentsStore((s) => s.toggleThreadExpanded);
+  const expandedThreadIds = useCommentsStore((s) => s.expandedThreadIds);
   const editComment = useCommentsStore((s) => s.editComment);
   const deleteComment = useCommentsStore((s) => s.deleteComment);
   const pingComment = useCommentsStore((s) => s.pingComment);
@@ -73,6 +75,7 @@ export function CommentCard({
   const isMine = comment.authorId === currentUserId;
   const showInlineReply = inlineReplyCommentId === comment.id;
   const isHighlighted = comment.pinged;
+  const isExpanded = expandedThreadIds.includes(comment.id);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -98,7 +101,7 @@ export function CommentCard({
     setMenuOpen(false);
     toast({
       title: "Comment pinged",
-      description: "Participants have been notified about this comment.",
+      description: "Pinned to the top of the discussion. Other pings have been replaced.",
     });
   };
 
@@ -121,6 +124,9 @@ export function CommentCard({
     toast({ title: "Comment updated" });
   };
 
+  // Display name: "You" when it's the current user's own comment, otherwise the real name
+  const displayName = isMine ? "You" : author?.name ?? "Unknown";
+
   if (!author) return null;
 
   return (
@@ -131,7 +137,7 @@ export function CommentCard({
       transition={{ duration: 0.2 }}
       className={cn(
         "group relative flex gap-3 rounded-xl px-2 py-2 transition",
-        isHighlighted && "bg-orange-50/60 ring-1 ring-orange-200",
+        isHighlighted && "bg-orange-50/80 ring-1 ring-orange-200 pinged-glow",
         !isHighlighted && "hover:bg-muted/50",
         grouped && "py-0.5"
       )}
@@ -149,9 +155,19 @@ export function CommentCard({
         {/* Header */}
         {!grouped && (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-semibold text-foreground">
-              {author.name}
+            <span
+              className={cn(
+                "text-sm font-semibold",
+                isMine ? "text-primary" : "text-foreground"
+              )}
+            >
+              {displayName}
             </span>
+            {isMine && (
+              <span className="rounded-full border border-primary/30 bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-primary">
+                me
+              </span>
+            )}
             <RoleBadge role={author.role} />
             <span className="text-xs text-muted-foreground" title={new Date(comment.createdAt).toLocaleString()}>
               {formatRelativeTime(comment.createdAt)}
@@ -162,7 +178,7 @@ export function CommentCard({
             {comment.pinged && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                 <Bell className="h-2.5 w-2.5" />
-                Pinged
+                Pinned to top
               </span>
             )}
           </div>
@@ -248,39 +264,120 @@ export function CommentCard({
           )}
         </AnimatePresence>
 
+        {/* Inline thread expansion (replies render BELOW the parent comment on the same page) */}
+        <AnimatePresence initial={false}>
+          {showThreadFooter && isExpanded && !asReply && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+              className="mt-2 overflow-hidden"
+            >
+              <div className="relative ml-5 rounded-xl border border-border/70 bg-muted/30 p-2">
+                {/* Vertical connector line */}
+                <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-gradient-to-b from-primary/40 via-border to-transparent" />
+
+                <div className="space-y-0.5">
+                  {comment.replies.length === 0 ? (
+                    <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      No replies yet — be the first to reply below.
+                    </div>
+                  ) : (
+                    comment.replies.map((r, idx) => {
+                      const replyAuthor = userMap[r.authorId];
+                      const prevAuthor =
+                        idx > 0 ? userMap[comment.replies[idx - 1].authorId] : null;
+                      const prevTs =
+                        idx > 0
+                          ? new Date(comment.replies[idx - 1].createdAt).getTime()
+                          : 0;
+                      const thisTs = new Date(r.createdAt).getTime();
+                      const replyGrouped =
+                        prevAuthor?.id === replyAuthor?.id &&
+                        thisTs - prevTs < 5 * 60 * 1000;
+
+                      return (
+                        <motion.div
+                          key={r.id}
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.18, delay: idx * 0.02 }}
+                          className="relative"
+                        >
+                          {!replyGrouped && (
+                            <div className="absolute -left-5 top-5 h-0.5 w-5 bg-border" />
+                          )}
+                          <CommentCard
+                            comment={r}
+                            discussionKey={discussionKey}
+                            asReply
+                            parentId={comment.id}
+                            grouped={replyGrouped}
+                          />
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Inline reply composer inside the expanded thread */}
+                {!showInlineReply && (
+                  <div className="mt-2">
+                    <MessageComposer
+                      discussionKey={discussionKey}
+                      parentCommentId={comment.id}
+                      variant="inline"
+                      placeholder={`Reply to ${author.name.split(" ")[0]}...`}
+                      onCancel={() => toggleThreadExpanded(comment.id)}
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Footer actions */}
         {!grouped && (
           <div className="mt-1.5 flex items-center gap-1 text-xs">
-            {/* Reply */}
-            {view !== "thread" && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (asReply) {
-                    // Replies in discussion view open inline composer
-                    setInlineReply(showInlineReply ? null : comment.id);
-                  } else if (showThreadFooter) {
-                    openThread(comment.id);
-                  } else {
-                    setInlineReply(showInlineReply ? null : comment.id);
-                  }
-                }}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
-              >
-                <CornerDownRight className="h-3 w-3" />
-                Reply
-              </button>
-            )}
+            {/* Reply — toggles inline composer (no navigation) */}
+            <button
+              type="button"
+              onClick={() => {
+                // Make sure thread is expanded so the user can see their reply land in context
+                if (showThreadFooter && !isExpanded && comment.replies.length > 0) {
+                  toggleThreadExpanded(comment.id);
+                }
+                setInlineReply(showInlineReply ? null : comment.id);
+              }}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            >
+              <CornerDownRight className="h-3 w-3" />
+              Reply
+            </button>
 
-            {/* Thread footer (top-level comments in discussion view) */}
-            {showThreadFooter && comment.replies.length > 0 && view !== "thread" && (
+            {/* Thread expansion toggle (top-level comments with replies) */}
+            {showThreadFooter && comment.replies.length > 0 && (
               <button
                 type="button"
-                onClick={() => openThread(comment.id)}
-                className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 font-medium text-primary transition hover:bg-orange-100"
+                onClick={() => toggleThreadExpanded(comment.id)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium transition",
+                  isExpanded
+                    ? "bg-orange-100 text-primary"
+                    : "bg-orange-50 text-primary hover:bg-orange-100"
+                )}
               >
+                {isExpanded ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
                 <MessageSquare className="h-3 w-3" />
-                {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                {comment.replies.length}{" "}
+                {comment.replies.length === 1 ? "reply" : "replies"}
               </button>
             )}
           </div>
@@ -328,7 +425,19 @@ export function CommentCard({
                 transition={{ duration: 0.15 }}
                 className="absolute right-0 top-9 z-30 w-44 overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-xl"
               >
-                <MenuItem onClick={() => { setInlineReply(showInlineReply ? null : comment.id); setMenuOpen(false); }}>
+                <MenuItem
+                  onClick={() => {
+                    if (
+                      showThreadFooter &&
+                      !isExpanded &&
+                      comment.replies.length > 0
+                    ) {
+                      toggleThreadExpanded(comment.id);
+                    }
+                    setInlineReply(showInlineReply ? null : comment.id);
+                    setMenuOpen(false);
+                  }}
+                >
                   <CornerDownRight className="h-3.5 w-3.5" /> Reply
                 </MenuItem>
                 <MenuItem onClick={handlePing}>

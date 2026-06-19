@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import { useCommentsStore } from "@/store/comments-store";
 import { AgencyListView } from "./AgencyListView";
 import { DiscussionView } from "./DiscussionView";
-import { ThreadView } from "./ThreadView";
 import { ImageLightbox } from "./ImageLightbox";
 import { useEffect } from "react";
 
@@ -68,7 +67,7 @@ export function CommentsDrawer() {
                 <X className="h-4 w-4" />
               </button>
 
-              {/* View router */}
+              {/* View router — only 'agencies' and 'discussion' now (threads are inline) */}
               <div className="relative flex-1 overflow-hidden">
                 <AnimatePresence mode="wait" initial={false}>
                   {view === "agencies" && (
@@ -93,18 +92,6 @@ export function CommentsDrawer() {
                       className="absolute inset-0"
                     >
                       <DiscussionView />
-                    </motion.div>
-                  )}
-                  {view === "thread" && (
-                    <motion.div
-                      key="thread"
-                      initial={{ opacity: 0, x: 24 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 24 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute inset-0"
-                    >
-                      <ThreadView />
                     </motion.div>
                   )}
                 </AnimatePresence>

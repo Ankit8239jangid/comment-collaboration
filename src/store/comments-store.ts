@@ -23,6 +23,8 @@ import type {
 } from "@/lib/types";
 import { uid } from "@/lib/utils";
 
+type ThemeMode = "light" | "gray" | "dark";
+
 interface CommentsState {
   // ---- master data ----
   users: User[];
@@ -39,14 +41,16 @@ interface CommentsState {
   // ---- ui state ----
   drawerOpen: boolean;
   activeCandidateId: string | null;
-  /** View stack inside the drawer: 'agencies' → 'discussion' → 'thread' */
-  view: "agencies" | "discussion" | "thread";
+  /** View stack inside the drawer: 'agencies' → 'discussion' (thread view is now inline) */
+  view: "agencies" | "discussion";
   activeAgencyId: string | null;
-  activeThreadId: string | null; // parent comment id when in thread view
+  activeThreadId: string | null; // kept for backwards-compat, unused now
 
   // ---- composer state ----
   /** Inline reply composer attached to a specific comment id (in discussion view) */
   inlineReplyCommentId: string | null;
+  /** Set of expanded parent comment IDs (inline thread expansion) */
+  expandedThreadIds: string[];
   typingUsers: Record<string, string[]>;
 
   // ---- search ----
@@ -59,12 +63,21 @@ interface CommentsState {
   // ---- lightbox ----
   lightboxImage: { url: string; name: string } | null;
 
+  // ---- theme ----
+  theme: ThemeMode;
+  setTheme: (t: ThemeMode) => void;
+  toggleTheme: () => void;
+
   // ---- actions ----
   openDrawer: (candidateId: string) => void;
   closeDrawer: () => void;
   goBack: () => void;
   openAgencyDiscussion: (agencyId: string) => void;
+  /** Kept for backwards-compat — now toggles inline expansion instead of navigating */
   openThread: (commentId: string) => void;
+  toggleThreadExpanded: (commentId: string) => void;
+  isThreadExpanded: (commentId: string) => boolean;
+  collapseAllThreads: () => void;
 
   setInlineReply: (commentId: string | null) => void;
   setDiscussionSearch: (q: string) => void;
@@ -134,11 +147,18 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
   activeAgencyId: null,
   activeThreadId: null,
   inlineReplyCommentId: null,
+  expandedThreadIds: [],
   typingUsers: {},
   discussionSearch: "",
   notifications: INITIAL_NOTIFICATIONS,
   notificationsOpen: false,
   lightboxImage: null,
+  theme: "gray", // default to gray for reduced eye strain
+  setTheme: (t) => set({ theme: t }),
+  toggleTheme: () =>
+    set((s) => ({
+      theme: s.theme === "light" ? "gray" : s.theme === "gray" ? "dark" : "light",
+    })),
 
   openDrawer: (candidateId) => {
     set({
@@ -159,15 +179,14 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
       activeAgencyId: null,
       activeThreadId: null,
       inlineReplyCommentId: null,
+      expandedThreadIds: [],
     });
   },
 
   goBack: () => {
     const { view } = get();
-    if (view === "thread") {
-      set({ view: "discussion", activeThreadId: null, inlineReplyCommentId: null });
-    } else if (view === "discussion") {
-      set({ view: "agencies", activeAgencyId: null, inlineReplyCommentId: null, discussionSearch: "" });
+    if (view === "discussion") {
+      set({ view: "agencies", activeAgencyId: null, inlineReplyCommentId: null, discussionSearch: "", expandedThreadIds: [] });
     }
   },
 
@@ -179,6 +198,7 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
       view: "discussion",
       activeAgencyId: agencyId,
       discussionSearch: "",
+      expandedThreadIds: [],
       discussions: s.discussions[k]
         ? {
             ...s.discussions,
@@ -189,8 +209,29 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
   },
 
   openThread: (commentId) => {
-    set({ view: "thread", activeThreadId: commentId, inlineReplyCommentId: null });
+    // Kept for backwards-compat — now toggles inline expansion
+    get().toggleThreadExpanded(commentId);
   },
+
+  toggleThreadExpanded: (commentId) => {
+    set((s) => {
+      const isExpanded = s.expandedThreadIds.includes(commentId);
+      return {
+        expandedThreadIds: isExpanded
+          ? s.expandedThreadIds.filter((id) => id !== commentId)
+          : [...s.expandedThreadIds, commentId],
+        // Close any open inline reply when collapsing
+        inlineReplyCommentId:
+          isExpanded && s.inlineReplyCommentId === commentId
+            ? null
+            : s.inlineReplyCommentId,
+      };
+    });
+  },
+
+  isThreadExpanded: (commentId) => get().expandedThreadIds.includes(commentId),
+
+  collapseAllThreads: () => set({ expandedThreadIds: [], inlineReplyCommentId: null }),
 
   setInlineReply: (commentId) => set({ inlineReplyCommentId: commentId }),
   setDiscussionSearch: (q) => set({ discussionSearch: q }),
@@ -342,14 +383,43 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
     set((s) => {
       const disc = s.discussions[k];
       if (!disc) return s;
-      const mark = (c: Comment): Comment =>
-        c.id === commentId ? { ...c, pinged: true } : c;
-      const comments = disc.comments.map((c) => {
-        if (isReply && parentId === c.id) {
-          return { ...c, replies: c.replies.map(mark) };
+      // Single-active-ping rule: clear ALL other pinged flags in this discussion,
+      // then mark ONLY the target comment as pinged. If the target was a reply,
+      // also clear pinged on the parent and all sibling replies.
+      const clearAll = (c: Comment): Comment => ({ ...c, pinged: false });
+
+      let targetFound = false;
+      const mark = (c: Comment): Comment => {
+        if (c.id === commentId) {
+          targetFound = true;
+          return { ...c, pinged: true };
         }
-        return mark(c);
-      });
+        return { ...c, pinged: false };
+      };
+
+      let comments: Comment[];
+      if (isReply && parentId) {
+        // Clear ping on top-level + all replies, then mark the specific reply
+        comments = disc.comments.map((c) => {
+          if (c.id === parentId) {
+            const replies = c.replies.map(mark);
+            return { ...c, pinged: false, replies };
+          }
+          return clearAll(c);
+        });
+      } else {
+        // Top-level comment: clear ALL pings, mark this one
+        comments = disc.comments.map(mark);
+      }
+
+      // For top-level pings: move the pinged comment to the TOP of the list,
+      // keeping the rest in their original chronological order.
+      if (!isReply && targetFound) {
+        const pinged = comments.find((c) => c.id === commentId);
+        const rest = comments.filter((c) => c.id !== commentId);
+        if (pinged) comments = [pinged, ...rest];
+      }
+
       return { discussions: { ...s.discussions, [k]: { ...disc, comments } } };
     });
     const state = get();

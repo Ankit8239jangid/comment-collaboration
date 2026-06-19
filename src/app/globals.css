@@ -43,8 +43,11 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root {
-  /* Brand orange: #F76711 */
+/* ============================================================
+   LIGHT THEME (default light mode)
+   ============================================================ */
+:root,
+[data-theme="light"] {
   --radius: 0.75rem;
   --background: #FFFFFF;
   --foreground: #111827;
@@ -78,6 +81,93 @@
   --sidebar-accent-foreground: #9A3A0A;
   --sidebar-border: #E5E7EB;
   --sidebar-ring: #F76711;
+  --app-bg: linear-gradient(135deg, #F8FAFC 0%, #FFF7ED 100%);
+  --surface-1: #FFFFFF;
+  --surface-2: #F9FAFB;
+}
+
+/* ============================================================
+   GRAY THEME (default — reduced eye strain, soft neutral bg)
+   ============================================================ */
+[data-theme="gray"] {
+  --radius: 0.75rem;
+  --background: #F1F2F5;          /* soft cool gray page bg */
+  --foreground: #0F172A;          /* near-black slate */
+  --card: #FFFFFF;                /* pure white cards for contrast */
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #F76711;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FFF3EA;
+  --secondary-foreground: #9A3A0A;
+  --muted: #E9EBEF;               /* slightly darker than white */
+  --muted-foreground: #5B6472;
+  --accent: #FFF3EA;
+  --accent-foreground: #9A3A0A;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #DEE2E8;              /* visible borders on gray */
+  --input: #DEE2E8;
+  --ring: #F76711;
+  --chart-1: #F76711;
+  --chart-2: #FB923C;
+  --chart-3: #FDBA74;
+  --chart-4: #FFEDD5;
+  --chart-5: #C2410C;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #F76711;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF3EA;
+  --sidebar-accent-foreground: #9A3A0A;
+  --sidebar-border: #DEE2E8;
+  --sidebar-ring: #F76711;
+  --app-bg: linear-gradient(135deg, #EEF1F5 0%, #F4F5F8 60%, #FFF1E6 100%);
+  --surface-1: #FFFFFF;
+  --surface-2: #F7F8FA;
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+[data-theme="dark"] {
+  --radius: 0.75rem;
+  --background: #0B0F17;
+  --foreground: #E5E7EB;
+  --card: #141925;
+  --card-foreground: #E5E7EB;
+  --popover: #141925;
+  --popover-foreground: #E5E7EB;
+  --primary: #FF7A2E;
+  --primary-foreground: #1A0A00;
+  --secondary: #2A1A0F;
+  --secondary-foreground: #FED7AA;
+  --muted: #1B2230;
+  --muted-foreground: #94A3B8;
+  --accent: #2A1A0F;
+  --accent-foreground: #FED7AA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #242C3B;
+  --input: #242C3B;
+  --ring: #FF7A2E;
+  --chart-1: #FF7A2E;
+  --chart-2: #FB923C;
+  --chart-3: #FDBA74;
+  --chart-4: #7C2D12;
+  --chart-5: #9A3412;
+  --sidebar: #0F141F;
+  --sidebar-foreground: #E5E7EB;
+  --sidebar-primary: #FF7A2E;
+  --sidebar-primary-foreground: #1A0A00;
+  --sidebar-accent: #2A1A0F;
+  --sidebar-accent-foreground: #FED7AA;
+  --sidebar-border: #242C3B;
+  --sidebar-ring: #FF7A2E;
+  --app-bg: linear-gradient(135deg, #0B0F17 0%, #11151F 60%, #1A0F08 100%);
+  --surface-1: #141925;
+  --surface-2: #1B2230;
 }
 
 @layer base {
@@ -97,7 +187,7 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #D1D5DB transparent;
+    scrollbar-color: #C1C5CE transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
@@ -107,11 +197,11 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #D1D5DB;
+    background-color: #C1C5CE;
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #9CA3AF;
+    background-color: #94A3B8;
   }
 
   .animate-typing {
@@ -153,5 +243,17 @@
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* App background helper — use this for page-level backgrounds */
+  .app-bg {
+    background: var(--app-bg);
+    min-height: 100vh;
+  }
+
+  /* Pinged comment glow */
+  .pinged-glow {
+    box-shadow: 0 0 0 1px rgba(247, 103, 17, 0.35),
+                0 6px 18px -8px rgba(247, 103, 17, 0.45);
   }
 }

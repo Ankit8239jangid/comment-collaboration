@@ -8,6 +8,9 @@ import {
   Clock,
   MessageSquare,
   Search,
+  Sun,
+  Moon,
+  Monitor,
   Users,
 } from "lucide-react";
 import { useCommentsStore } from "@/store/comments-store";
@@ -22,6 +25,8 @@ export function CandidateList() {
   const openDrawer = useCommentsStore((s) => s.openDrawer);
   const notificationsOpen = useCommentsStore((s) => s.toggleNotifications);
   const notifications = useCommentsStore((s) => s.notifications);
+  const theme = useCommentsStore((s) => s.theme);
+  const setTheme = useCommentsStore((s) => s.setTheme);
   const [query, setQuery] = useState("");
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -39,7 +44,7 @@ export function CandidateList() {
   }, [candidates, query]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50/30">
+    <div className="app-bg min-h-screen">
       {/* Top navigation */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -70,6 +75,46 @@ export function CandidateList() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Theme switcher — segmented control */}
+            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                title="Light theme"
+                className={`flex h-7 w-7 items-center justify-center rounded-md transition ${
+                  theme === "light"
+                    ? "bg-background text-amber-600 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Sun className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("gray")}
+                title="Gray theme (default — easier on the eyes)"
+                className={`flex h-7 w-7 items-center justify-center rounded-md transition ${
+                  theme === "gray"
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-primary/40"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                title="Dark theme"
+                className={`flex h-7 w-7 items-center justify-center rounded-md transition ${
+                  theme === "dark"
+                    ? "bg-background text-slate-300 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Moon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
             <div className="relative">
               <button
                 type="button"
