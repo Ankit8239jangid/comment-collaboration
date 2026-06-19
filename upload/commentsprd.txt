@@ -1,0 +1,808 @@
+# PRD: Candidate Comments & Collaboration System
+
+## Product
+
+SeekHelpers BackOffice
+
+## Module
+
+Candidate Comments & Discussion Drawer
+
+## Goal
+
+Provide a centralized discussion and collaboration system around a candidate where recruiters, agencies, sales teams, managers, and internal staff can communicate, share updates, upload files, and coordinate actions without leaving the candidate list screen.
+
+The experience should feel similar to Slack, Linear, Intercom, and Discord Threads while maintaining the SeekHelpers design language.
+
+---
+
+# Core User Journey
+
+## Candidate List
+
+Users see a list of candidates.
+
+Each candidate row contains:
+
+* Candidate Avatar
+* Candidate Name
+* Candidate ID
+* Candidate Status
+* Agency
+* Last Activity
+* Comments Button
+
+Example:
+
+Comments (14)
+
+---
+
+## Open Comments Drawer
+
+Clicking Comments opens a right-side drawer.
+
+Animation:
+
+* Slide from right
+* 250ms duration
+* Framer Motion animation
+* Smooth open and close
+
+Drawer Width:
+
+Desktop:
+620px–720px
+
+Tablet:
+100%
+
+Mobile:
+100%
+
+---
+
+# Drawer Structure
+
+The drawer has two levels.
+
+## Level 1: Agency Discussions List
+
+Displays all teams/agencies that have participated in discussions about the candidate.
+
+Examples:
+
+* SeekHelpers Agency
+* Recruitment Team
+* Sales Team
+* Elite Helpers
+
+Each card displays:
+
+* Agency Avatar
+* Agency Name
+* Last Message Preview
+* Last Activity Time
+* Total Comments Count
+* Unread Badge
+
+Example:
+
+SeekHelpers Agency
+
+Last message:
+"Candidate has submitted passport."
+
+2 hours ago
+
+14 comments
+
+---
+
+## Agency Search
+
+Search field at top.
+
+Placeholder:
+
+Search discussions...
+
+Searches:
+
+* Agency Name
+* Last Message
+* Participants
+
+---
+
+# Agency Discussion Screen
+
+Clicking an agency opens its discussion.
+
+No page reload.
+
+Everything stays inside the drawer.
+
+Header:
+
+← Back
+
+SeekHelpers Agency
+
+14 Comments
+
+Header remains sticky during scrolling.
+
+---
+
+# Discussion Layout
+
+Discussion consists of:
+
+* Comment Feed
+* Thread System
+* Reactions
+* Attachments
+* Composer
+
+Structure:
+
+Header
+
+Comment Feed
+
+Sticky Composer
+
+---
+
+# Comment Structure
+
+Each comment contains:
+
+* Avatar
+* Name
+* Role Badge
+* Timestamp
+* Message
+* Attachments
+* Reactions
+* Reply Count
+
+Example:
+
+John Recruiter
+
+Internal Recruiter
+
+5 min ago
+
+Candidate passport has been uploaded.
+
+---
+
+# User Roles
+
+Supported role badges:
+
+* Recruiter
+* Manager
+* Sales
+* Admin
+* Agency Representative
+
+Role badges appear beside username.
+
+---
+
+# Mentions
+
+Users can mention teammates.
+
+Typing:
+
+@
+
+opens a searchable dropdown.
+
+Example:
+
+@Sarah Jenkins
+
+@Alex Chen
+
+@Emily Wang
+
+Selecting a user inserts a mention.
+
+Mention Style:
+
+* Orange background
+* Rounded pill
+* Bold text
+
+Example:
+
+@Sarah Jenkins
+
+Mention notifications are generated automatically.
+
+---
+
+# Threaded Replies
+
+Every comment supports replies.
+
+Click:
+
+Reply (5)
+
+opens a dedicated thread view.
+
+---
+
+# Dedicated Thread View
+
+Layout:
+
+← Back
+
+Parent Comment (Sticky)
+
+Replies
+
+Replies
+
+Replies
+
+Reply Composer
+
+Behavior:
+
+* Parent comment remains sticky at top.
+* Replies scroll independently.
+* Composer remains sticky at bottom.
+
+This follows Slack and Linear thread behavior.
+
+---
+
+# Thread Hierarchy
+
+Replies must be visually connected to the parent comment.
+
+Use:
+
+* Vertical connector line
+* Indentation
+* Reply label
+
+Example:
+
+Sarah Jenkins
+
+Parent Comment
+
+│
+
+├─ John Recruiter
+
+├─ Alex Chen
+
+└─ Emily Wang
+
+Users should immediately understand the hierarchy.
+
+---
+
+# Thread Rules
+
+Maximum nesting:
+
+1 level
+
+Allowed:
+
+Comment
+→ Reply
+
+Not allowed:
+
+Reply
+→ Reply
+→ Reply
+
+Reason:
+
+Maintains readability.
+
+---
+
+# Emoji Reactions
+
+Supported reactions:
+
+👍
+
+❤️
+
+🔥
+
+😂
+
+👏
+
+👀
+
+Features:
+
+* Add reaction
+* Remove reaction
+* View reaction count
+
+Display:
+
+👍 4
+
+🔥 2
+
+😂 1
+
+---
+
+# Emoji Picker
+
+Clicking emoji button opens a popover.
+
+Requirements:
+
+* Anchored to emoji button
+* Proper positioning
+* Click outside closes
+* Mobile responsive
+
+---
+
+# Image Upload
+
+Supported formats:
+
+* PNG
+* JPG
+* JPEG
+* WEBP
+
+Max size:
+
+10MB
+
+Features:
+
+* Drag & Drop
+* Paste Image
+* File Picker
+
+Images appear inside the comment bubble.
+
+Click image:
+
+Open Lightbox Preview
+
+---
+
+# Document Upload
+
+Supported formats:
+
+* PDF
+* DOCX
+* XLSX
+* TXT
+* ZIP
+
+Display:
+
+passport.pdf
+
+2.4 MB
+
+Download
+
+Preview
+
+Documents appear as attachment cards.
+
+---
+
+# Attachment Preview Area
+
+Before sending:
+
+Selected Files
+
+passport.pdf
+
+candidate-photo.jpg
+
+Remove
+
+Users can remove files before submission.
+
+---
+
+# Message Composer
+
+Always sticky at bottom.
+
+Components:
+
+@ Mention
+
+Image Upload
+
+Document Upload
+
+Emoji
+
+Text Area
+
+Send Button
+
+Placeholder:
+
+Reply to SeekHelpers Agency...
+
+Send button becomes active only when content exists.
+
+---
+
+# Comment Actions
+
+Hovering over a comment shows:
+
+* Reply
+* React
+* Edit
+* Delete
+* Copy Link
+
+Permissions:
+
+Author:
+Edit + Delete
+
+Others:
+Reply + React + Copy Link
+
+---
+
+# Message Grouping
+
+Consecutive messages from the same user should be grouped.
+
+Instead of:
+
+Avatar
+
+Message
+
+Avatar
+
+Message
+
+Use:
+
+Avatar
+
+Message
+
+Message
+
+Message
+
+Improves readability.
+
+---
+
+# Date Grouping
+
+Messages are grouped by date.
+
+Example:
+
+Today
+
+Messages
+
+Yesterday
+
+Messages
+
+June 12
+
+Messages
+
+---
+
+# Unread Divider
+
+When opening a discussion:
+
+──────────────
+
+New Messages
+
+──────────────
+
+Appears above the first unread message.
+
+---
+
+# Typing Indicator
+
+Display:
+
+Sarah Jenkins is typing...
+
+Automatically disappears when user stops typing.
+
+---
+
+# Search Inside Discussion
+
+Users can search messages within the current discussion.
+
+Searches:
+
+* Message content
+* Mentions
+* Attachments
+* User names
+
+Placeholder:
+
+Search comments...
+
+---
+
+# Empty States
+
+## No Discussions
+
+No discussions available.
+
+No agencies have commented on this candidate yet.
+
+---
+
+## No Replies
+
+No replies yet.
+
+Start the discussion.
+
+---
+
+# Notification System
+
+Generate notifications for:
+
+Mention:
+
+Sarah Jenkins mentioned you.
+
+Reply:
+
+John replied to your comment.
+
+New Comment:
+
+New comment added in SeekHelpers Agency.
+
+---
+
+# Mobile Experience
+
+Mobile uses full-screen discussion mode.
+
+Behavior:
+
+Agency List
+
+↓
+
+Discussion
+
+↓
+
+Thread View
+
+Back navigation supported.
+
+No nested drawers.
+
+---
+
+# Visual Design
+
+## Style
+
+Modern SaaS
+
+References:
+
+* Slack
+* Linear
+* Notion
+* Intercom
+
+---
+
+## Colors
+
+Primary:
+
+#F76711
+
+Background:
+
+#FFFFFF
+
+Secondary Background:
+
+#F8FAFC
+
+Border:
+
+#E5E7EB
+
+Primary Text:
+
+#111827
+
+Secondary Text:
+
+#6B7280
+
+---
+
+## Typography
+
+Font:
+
+Inter
+
+Comment Text:
+
+14px
+
+Line Height:
+
+24px
+
+User Name:
+
+16px
+
+Bold
+
+Timestamp:
+
+12px
+
+Muted
+
+---
+
+# Animations
+
+Use Framer Motion.
+
+Required animations:
+
+* Drawer Open
+* Drawer Close
+* Thread Navigation
+* Emoji Popover
+* Mention Dropdown
+* Attachment Preview
+* Image Lightbox
+
+Animations should be subtle and under 250ms.
+
+---
+
+# Performance Requirements
+
+Support:
+
+* 1000+ comments
+* Infinite scrolling
+* Virtualized rendering
+* Lazy image loading
+* Optimistic updates
+
+No noticeable lag.
+
+---
+
+# Recommended Frontend Architecture
+
+components/
+
+CandidateList.tsx
+
+CommentsDrawer.tsx
+
+AgencyListView.tsx
+
+DiscussionView.tsx
+
+ThreadView.tsx
+
+CommentCard.tsx
+
+ReplyCard.tsx
+
+MessageComposer.tsx
+
+EmojiPicker.tsx
+
+MentionDropdown.tsx
+
+AttachmentPreview.tsx
+
+ImageLightbox.tsx
+
+TypingIndicator.tsx
+
+DiscussionSearch.tsx
+
+---
+
+# Recommended Stack
+
+Framework:
+Next.js 16
+
+Language:
+TypeScript
+
+Styling:
+Tailwind CSS
+
+UI Components:
+shadcn/ui
+
+Animations:
+Framer Motion
+
+Icons:
+Lucide React
+
+State:
+Zustand
+
+Data Fetching:
+TanStack Query
+
+---
+
+# Success Criteria
+
+Users must be able to:
+
+* Open candidate comments
+* Browse agencies
+* Open discussions
+* Create comments
+* Mention teammates
+* Upload images
+* Upload documents
+* React with emojis
+* Create threaded replies
+* Navigate thread view
+* Search discussions
+* Receive notifications
+* Manage large conversations efficiently
+
+The final experience should feel like a modern enterprise collaboration tool built specifically for candidate management and recruitment workflows.
