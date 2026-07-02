@@ -6,12 +6,12 @@ import { ArrowLeft, Search, X, MessageSquare, Bell } from "lucide-react";
 import { useCommentsStore, discussionKey } from "@/store/comments-store";
 import { CommentCard } from "./CommentCard";
 import { MessageComposer } from "./MessageComposer";
-import { TypingIndicator } from "./TypingIndicator";
+
 import { Input } from "@/components/ui/input";
 import {
   cn,
   formatDateGroup,
-  formatTime,
+
 } from "@/lib/utils";
 import type { Comment } from "@/lib/types";
 import { useState } from "react";
@@ -151,7 +151,7 @@ export function DiscussionView() {
     <div className="flex h-full flex-col">
       {/* Sticky header */}
       <div className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 mr-10">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
@@ -163,7 +163,7 @@ export function DiscussionView() {
             </button>
             <div className="flex min-w-0 items-center gap-2">
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${agency.gradient} text-xs font-bold text-white`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${agency.gradient} text-xs font-bold text-white`}
               >
                 {agency.name
                   .split(" ")
@@ -182,6 +182,7 @@ export function DiscussionView() {
               </div>
             </div>
           </div>
+
           <button
             type="button"
             onClick={() => setShowSearch((s) => !s)}
@@ -301,8 +302,7 @@ export function DiscussionView() {
           </div>
         )}
 
-        {/* Typing indicator */}
-        <TypingIndicator userIds={["u_sarah"]} />
+
       </div>
 
       {/* Sticky composer */}

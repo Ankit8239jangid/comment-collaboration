@@ -26,7 +26,6 @@ import { useCommentsStore } from "@/store/comments-store";
 import type { Comment } from "@/lib/types";
 import {
   cn,
-  formatTime,
   formatRelativeTime,
 } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -89,7 +88,7 @@ export function CommentCard({
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/?comment=${comment.id}`;
-    navigator.clipboard?.writeText(url).catch(() => {});
+    navigator.clipboard?.writeText(url).catch(() => { });
     setCopied(true);
     setMenuOpen(false);
     toast({ title: "Link copied", description: "Comment link copied to clipboard." });
@@ -276,7 +275,7 @@ export function CommentCard({
             >
               <div className="relative ml-5 rounded-xl border border-border/70 bg-muted/30 p-2">
                 {/* Vertical connector line */}
-                <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-gradient-to-b from-primary/40 via-border to-transparent" />
+                <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-linear-to-b from-primary/40 via-border to-transparent" />
 
                 <div className="space-y-0.5">
                   {comment.replies.length === 0 ? (

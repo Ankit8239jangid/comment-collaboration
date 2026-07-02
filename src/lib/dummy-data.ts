@@ -81,7 +81,7 @@ export const USER_MAP: Record<string, User> = Object.fromEntries(
 export const AGENCIES: Agency[] = [
   {
     id: "a_seekhelpers",
-    name: "SeekHelpers Agency",
+    name: "Helper Agency",
     gradient: "from-orange-500 to-amber-500",
     participantIds: ["u_john", "u_sarah", "u_alex", "u_emily", "u_priya"],
   },
@@ -571,7 +571,7 @@ export const EMOJI_CATEGORIES: { name: string; emojis: string[] }[] = [
     ],
   },
   {
-    name: "Hearts & Symbols",
+    name: "Hearts",
     emojis: [
       "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
       "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "🔥", "⭐",
